@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #SBATCH --job-name      immunebuilder-test
-#SBATCH --cpus-per-task 12 
-#SBATCH --mem           12GB
-#SBATCH --time          02:10:00 
+#SBATCH --cpus-per-task 6 
+#SBATCH --mem           4GB
+#SBATCH --time          00:02:00 
 #SBATCH --output        slog/%j.out
 
 
@@ -18,6 +18,7 @@ cd -P .
 
 #${CMD} ./abody_prediction_example.py
 
-${CMD} ABodyBuilder2 --fasta_file BCR5__m84227_251207_031623_s1_157159497_ccs_2.fasta \
+${CMD} ABodyBuilder2 --fasta_file BCR5__m84227_251207_031623_s1_157159693_ccs_2.fasta \
   --output /gpfs3/well/kir/projects/mirror/training/immunebuilder/results \
+  --to_directory \
   --n_threads ${SLURM_CPUS_PER_TASK}
