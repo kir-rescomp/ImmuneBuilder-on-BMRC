@@ -45,7 +45,7 @@ antibody.save(output_file)
 
 ---
 
-## SLURM script with Apptainer
+## Slurm submission script with Apptainer
 
 The job is run inside an Apptainer container. Two environment variables are set to simplify execution:
 
