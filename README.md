@@ -1,4 +1,4 @@
-# ImmuneBuilder on BMRC Cluster
+# ImmuneBuilder on BMRC Cluster (deployed with Apptainer)
 
 [ImmuneBuilder](https://github.com/oxpig/ImmuneBuilder) is a set of deep learning models for predicting the structures of immune receptor proteins (antibodies, nanobodies, TCRs).
 
