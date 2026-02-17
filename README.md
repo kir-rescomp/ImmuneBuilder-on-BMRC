@@ -74,6 +74,10 @@ ${CMD} ./abody_prediction_example.py
 
 ## Slurm submission script with Apptainer - Using ABB2 Binary `ABodyBuilder2` 
 
+- ⚠️ `--output` - This will be pointing to the place where you would like to save the results. If you are running 
+  multiple jobs from the same directory, change the path to results Or give a new directory name per sample. Otherwie, 
+  it will over-ride the results from previous run 
+
 ```bash
 #!/bin/bash
 
