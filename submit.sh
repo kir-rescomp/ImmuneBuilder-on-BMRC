@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --job-name     immunebuilder-test
-#SBATCH --cpus-per-tas 2 
-#SBATCH --mem          2GB
-#SBATCH --time         00:10:00
-#SBATCH --output       slog/%j.out
+#SBATCH --job-name      immunebuilder-test
+#SBATCH --cpus-per-task 12 
+#SBATCH --mem           12GB
+#SBATCH --time          02:10:00 
+#SBATCH --output        slog/%j.out
 
 
 # Speficy apptainer specific environment variables
@@ -16,4 +16,8 @@ export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuil
 # if using symlinks, we have to resolve the current working directory path correctly with 
 cd -P . 
 
-${CMD} ./abody_prediction_example.py
+#${CMD} ./abody_prediction_example.py
+
+${CMD} ABodyBuilder2 --fasta_file BCR5__m84227_251207_031623_s1_157159497_ccs_2.fasta \
+  --output /gpfs3/well/kir/projects/mirror/training/immunebuilder/results \ 
+  --n_threads ${SLURM_CPUS_PER_TASK}
