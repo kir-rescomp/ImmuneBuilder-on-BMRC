@@ -115,6 +115,30 @@ A safety check. If the array was submitted with more tasks than there are files 
 
 Example: If your input directory contains sample_A.fasta, sample_B.fasta, sample_C.fasta, submitting --array=0-2 will spawn 3 jobs — each processing exactly one file.
 
+### Post-processing : Rename `final_model.pdb`to to `samplename.pdb` and combine them to a single directory
+
+```bash
+#!/bin/bash
+
+PDB_DIR=""
+OUT_DIR=""
+
+mkdir -p "$OUT_DIR"
+
+for sample_dir in "${PDB_DIR}"/*/; do
+    sample=$(basename "$sample_dir")
+    src="${sample_dir}final_model.pdb"
+    dst="${sample_dir}${sample}.pdb"
+
+    if [[ -f "$src" ]]; then
+        mv "$src" "$dst"
+        cp "$dst" "$OUT_DIR/"
+        echo "Done: ${sample}.pdb"
+    else
+        echo "WARNING: No final_model.pdb in ${sample}, skipping."
+    fi
+done
+```
 
 
 
