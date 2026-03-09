@@ -83,6 +83,38 @@ ${CMD} ABodyBuilder2 \
     --to_directory \
     --n_threads "${SLURM_CPUS_PER_TASK}"
 ```
+#### Notes
+
+
+**How each job knows which file to process**
+
+When a SLURM array job runs, it launches many identical copies of the script simultaneously — 
+each one gets a unique number via $SLURM_ARRAY_TASK_ID (0, 1, 2, 3, ...).
+
+This snippet uses that number to assign each job its own input file:
+
+```bash
+mapfile -t FASTA_FILES < <(ls "${INPUT_DIR}"/*.fasta)
+```
+Reads all .fasta files in the input directory into a bash array called FASTA_FILES. 
+The first file is index 0, the second is index 1, and so on.
+
+```bash
+FASTA="${FASTA_FILES[$SLURM_ARRAY_TASK_ID]}"
+```
+Picks the file at the position matching the current job's task ID. So job 0 processes 
+the first file, job 1 the second, and so on — automatically, with no manual assignment needed.
+
+```bash
+if [[ -z "$FASTA" ]]; then
+    echo "No file for task ID ${SLURM_ARRAY_TASK_ID}, exiting."
+    exit 0
+fi
+```
+A safety check. If the array was submitted with more tasks than there are files (e.g. 10 tasks but only 7 files), the extra jobs exit cleanly rather than crashing or producing an error.
+
+Example: If your input directory contains sample_A.fasta, sample_B.fasta, sample_C.fasta, submitting --array=0-2 will spawn 3 jobs — each processing exactly one file.
+
 
 
 
