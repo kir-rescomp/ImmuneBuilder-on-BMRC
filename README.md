@@ -1,90 +1,14 @@
-# ImmuneBuilder on BMRC Cluster (deployed with Apptainer)
+# ABodyBuilder2 Job Arrays
 
-[ImmuneBuilder](https://github.com/oxpig/ImmuneBuilder) is a set of deep learning models for predicting the structures of immune receptor proteins (antibodies, nanobodies, TCRs).
+## Slurm Script for a Single Sample 
 
----
-
-## Why pre-download the weights?
-
-BMRC compute nodes do not have internet access. By default, `ABodyBuilder2` attempts to download model weights from [Zenodo](https://zenodo.org/record/7258553) at runtime — this will fail on compute nodes with a proxy/connection error.
-
-The solution is to download the four weight files (`antibody_model_1` – `antibody_model_4`) once from a login node (which has internet access) and store them on BMRC filesystem.
-
-```bash
-WEIGHTS_DIR=/gpfs3/well/kir/projects/mirror/training/immunebuilder/immunebuilder_weights
-mkdir -p "${WEIGHTS_DIR}"
-
-for i in 1 2 3 4; do
-    wget -c "https://zenodo.org/record/7258553/files/antibody_model_${i}?download=1" \
-         -O "${WEIGHTS_DIR}/antibody_model_${i}"
-done
 ```
-
----
-
-## Pointing the script to pre-downloaded weights
-
-`ABodyBuilder2.__init__` accepts a `weights_dir` parameter. Pass the GPFS path to bypass the download step entirely:
-
-```python
-#!/usr/bin/env python3
-
-from ImmuneBuilder import ABodyBuilder2
-
-predictor = ABodyBuilder2(weights_dir="/gpfs3/well/kir/projects/mirror/training/immunebuilder/immunebuilder_weights")
-
-output_file = "my_antibody.pdb"
-sequences = {
-  'H': 'EVQLVESGGGVVQPGGSLRLSCAASGFTFNSYGMHWVRQAPGKGLEWVAFIRYDGGNKYYADSVKGRFTISRDNSKNTLYLQMKSLRAEDTAVYYCANLKDSRYSGSYYDYWGQGTLVTVS',
-  'L': 'VIWMTQSPSSLSASVGDRVTITCQASQDIRFYLNWYQQKPGKAPKLLISDASNMETGVPSRFSGSGSGTDFTFTISSLQPEDIATYYCQQYDNLPFTFGPGTKVDFK'
-}
-
-antibody = predictor.predict(sequences)
-antibody.save(output_file)
-```
-
----
-
-## Slurm submission script with Apptainer - Using ABB2 Python API
-
-The job is run inside an Apptainer container. Two environment variables are set to simplify execution:
-
-- `APPTAINER_BIND` — mounts the required GPFS filesystems into the container, making both the input data and pre-downloaded weights accessible.
-- `CMD` — shorthand for the `apptainer exec` call to avoid repetition.
-
-```bash
-#!/bin/bash
-
-#SBATCH --job-name     immunebuilder-test
-#SBATCH --cpus-per-task 2
-#SBATCH --mem          2GB
-#SBATCH --time         00:10:00
-#SBATCH --output       slog/%j.out
-
-export APPTAINER_BIND="/gpfs3/well,/gpfs3/users"
-export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuilder.sif"
-
-cd -P .
-
-${CMD} ./abody_prediction_example.py
-```
-
-> `cd -P .` resolves any symlinks in the current working directory, ensuring paths are correctly interpreted inside the container.
-
-
-## Slurm submission script with Apptainer - Using ABB2 Binary `ABodyBuilder2` 
-
-- ⚠️ `--output` - This will be pointing to the place where you would like to save the results. If you are running 
-  multiple jobs from the same directory, change the path to results Or give a new directory name per sample. Otherwie, 
-  it will over-ride the results from previous run 
-
-```bash
 #!/bin/bash
 
 #SBATCH --job-name      immunebuilder-test
 #SBATCH --cpus-per-task 6 
 #SBATCH --mem           4GB
-#SBATCH --time          00:02:00 
+#SBATCH --time          00:30:00 
 #SBATCH --output        slog/%j.out
 
 
@@ -98,8 +22,67 @@ export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuil
 cd -P . 
 
 
-${CMD} ABodyBuilder2 --fasta_file BCR5__m84227_251207_031623_s1_157159693_ccs_2.fasta \
-  --output /gpfs3/well/kir/projects/mirror/training/immunebuilder/results \
+${CMD} ABodyBuilder2 --fasta_file /gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/ab2/BCR10__m84227_251207_031623_s1_100008597_ccs_2.fasta \
+  --output /gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/ab2_pdb \
   --to_directory \
   --n_threads ${SLURM_CPUS_PER_TASK}
 ```
+
+## Slurm array script for multiple inputs
+
+### Testing
+
+1. Created a subset of inputs in `/gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/subset`
+2. Count the number of files in the directory with `ls  subset| wc -l` ( we will need this number
+   to decide the number of array tasks .i.e. `#SBATCH --array` range will be `0-(n-1)` where `n` is the output
+   for above `ls input_directory| wc -l` command 
+
+
+```bash
+#!/bin/bash -e
+
+#SBATCH --job-name      immunebuilder-array
+#SBATCH --cpus-per-task 6
+#SBATCH --mem           4GB
+#SBATCH --time          00:10:00
+#SBATCH --output        subset_slog/%A_%a.out
+#SBATCH --array         0-9
+
+# --- Paths ---
+INPUT_DIR="/gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/subset"
+OUTPUT_DIR="/gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/subset_pdb"
+
+# --- Build file list and pick this task's file ---
+mapfile -t FASTA_FILES < <(ls "${INPUT_DIR}"/*.fasta)
+FASTA="${FASTA_FILES[$SLURM_ARRAY_TASK_ID]}"
+
+# Safety check — exit cleanly if index is out of bounds
+if [[ -z "$FASTA" ]]; then
+    echo "No file for task ID ${SLURM_ARRAY_TASK_ID}, exiting."
+    exit 0
+fi
+
+# --- Derive output directory name from filename (strip path + .fasta) ---
+SAMPLE=$(basename "$FASTA" .fasta)
+SAMPLE_OUT="${OUTPUT_DIR}/${SAMPLE}"
+mkdir -p "$SAMPLE_OUT"
+
+# --- Apptainer config ---
+export APPTAINER_BIND="/gpfs3/well,/gpfs3/users,/gpfs3/well/kir/projects/mirror/training/immunebuilder/immunebuilder_weights:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/trained_model"
+export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuilder.sif"
+
+cd -P .
+
+# --- Run ---
+echo "Processing: ${FASTA}"
+echo "Output to:  ${SAMPLE_OUT}"
+
+${CMD} ABodyBuilder2 \
+    --fasta_file "$FASTA" \
+    --output "$SAMPLE_OUT" \
+    --to_directory \
+    --n_threads "${SLURM_CPUS_PER_TASK}"
+```
+
+
+
