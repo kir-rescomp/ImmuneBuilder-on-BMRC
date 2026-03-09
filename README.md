@@ -89,7 +89,7 @@ ${CMD} ABodyBuilder2 \
 **How each job knows which file to process**
 
 When a SLURM array job runs, it launches many identical copies of the script simultaneously — 
-each one gets a unique number via $SLURM_ARRAY_TASK_ID (0, 1, 2, 3, ...).
+each one gets a unique number via `$SLURM_ARRAY_TASK_ID (0, 1, 2, 3, ...).`
 
 This snippet uses that number to assign each job its own input file:
 
