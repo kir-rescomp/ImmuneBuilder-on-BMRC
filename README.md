@@ -53,7 +53,7 @@ INPUT_DIR="/gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/subse
 OUTPUT_DIR="/gpfs3/well/ldustin/projects/archive/Kahlio_PacBio_1/RIO_BCR_10/subset_pdb"
 
 # --- Build file list and pick this task's file ---
-mapfile -t FASTA_FILES < <(ls "${INPUT_DIR}"/*.fasta)
+mapfile -t FASTA_FILES < <(find "${INPUT_DIR}" -maxdepth 1 -name '*.fasta' -type f | sort)
 FASTA="${FASTA_FILES[$SLURM_ARRAY_TASK_ID]}"
 
 # Safety check — exit cleanly if index is out of bounds
