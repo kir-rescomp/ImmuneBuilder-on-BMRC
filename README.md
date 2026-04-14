@@ -118,6 +118,7 @@ Example: If your input directory contains sample_A.fasta, sample_B.fasta, sample
 ## Check for failed jobs 
 
 - Replace `JOBID` with the parent job id of the array .
+- Output will be a comma separated list
 
 ```bash
 
