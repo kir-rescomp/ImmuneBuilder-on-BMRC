@@ -129,7 +129,7 @@ Example: If your input directory contains sample_A.fasta, sample_B.fasta, sample
 ```
 
 
-### Post-processing : Rename `final_model.pdb`to to `samplename.pdb` and combine them to a single directory
+## Post-processing : Rename `final_model.pdb`to to `samplename.pdb` and combine them to a single directory
 
 ```bash
 #!/bin/bash
