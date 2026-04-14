@@ -115,6 +115,19 @@ A safety check. If the array was submitted with more tasks than there are files 
 
 Example: If your input directory contains sample_A.fasta, sample_B.fasta, sample_C.fasta, submitting --array=0-2 will spawn 3 jobs — each processing exactly one file.
 
+## Check for failed jobs 
+
+- Replace `JOBID` with the parent job id of the array .
+
+```bash
+
+ sacct -j JOBID -n -o jobid%30,state%20 \
+    | awk '!/\./ && /FAILED|TIMEOUT|OUT_OF_MEMORY/ {
+        split($1,a,"_"); if(a[2]!="") ids=ids (ids?",":"") a[2]
+      } END{print ids}'
+```
+
+
 ### Post-processing : Rename `final_model.pdb`to to `samplename.pdb` and combine them to a single directory
 
 ```bash
