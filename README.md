@@ -15,7 +15,12 @@
 # Speficy apptainer specific environment variables
 # Primarily for binging the file system and another for exec comamnd to
 # shorten the execution command 
-export APPTAINER_BIND="/gpfs3/well,/gpfs3/users,/gpfs3/well/kir/projects/mirror/Immunebuilder/weights:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/trained_model"
+export APPTAINER_BIND="
+/gpfs3/well,\
+/gpfs3/users,\
+/gpfs3/well/kir/projects/mirror/Immunebuilder/weights:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/trained_model,\
+/gpfs3/well/kir/projects/mirror/containers/patches/refine.py:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/refine.py"
+
 export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuilder.sif"
 
 # if using symlinks, we have to resolve the current working directory path correctly with 
@@ -68,7 +73,12 @@ SAMPLE_OUT="${OUTPUT_DIR}/${SAMPLE}"
 mkdir -p "$SAMPLE_OUT"
 
 # --- Apptainer config ---
-export APPTAINER_BIND="/gpfs3/well,/gpfs3/users,/gpfs3/well/kir/projects/mirror/Immunebuilder/weights:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/trained_model"
+export APPTAINER_BIND="
+/gpfs3/well,\
+/gpfs3/users,\
+/gpfs3/well/kir/projects/mirror/Immunebuilder/weights:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/trained_model,\
+/gpfs3/well/kir/projects/mirror/containers/patches/refine.py:/opt/conda/envs/immunebuilder/lib/python3.9/site-packages/ImmuneBuilder/refine.py"
+
 export CMD="apptainer exec /gpfs3/well/kir/projects/mirror/containers/immunebuilder.sif"
 
 cd -P .
